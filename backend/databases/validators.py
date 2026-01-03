@@ -1,14 +1,18 @@
+# USER VALIDATORS
+
+from pydantic import BaseModel, EmailStr
 class UserCreate(BaseModel):
-    username: str
-    email: str
+    name: str
+    email: EmailStr
     password: str
 
 
 class UserUpdate(BaseModel):
-    username: str
-    email: str
+    name: str
+    email: EmailStr
     password: str
 
+# DOCUMENT VALIDATORS
 
 class DocumentCreate(BaseModel):
     title: str
@@ -18,3 +22,10 @@ class DocumentCreate(BaseModel):
 class DocumentUpdate(BaseModel):
     title: str
     content: str
+
+# RESPONSE VALIDATORS
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
