@@ -15,7 +15,9 @@ async def create_documents_table(db: AbstractDatabase):
         "id SERIAL PRIMARY KEY", 
         "title TEXT NOT NULL", 
         "content TEXT NOT NULL", 
-        "owner_id INTEGER REFERENCES users(id)"
+        "owner_id INTEGER REFERENCES users(id)",
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
     )
 
 async def create_tables(db: AbstractDatabase):
