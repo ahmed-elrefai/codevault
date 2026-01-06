@@ -1,10 +1,10 @@
 from starlette import status
 from databases.validators import UserLogin
 from databases.db import AbstractDatabase, get_db
-from utils.security import verify_password, create_access_token, verify_access_token
+from utils.security import verify_password, create_access_token, verify_access_token,hash_password
 from fastapi import HTTPException
 from fastapi import APIRouter, Depends
-from databases.validators import UserResponse
+from databases.validators import UserResponse, UserCreate
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -26,3 +26,16 @@ async def get_current_user(token: str, db: AbstractDatabase = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
     return UserResponse(**user)
+
+@router.post("/signup")
+async def sign_up(user_data: UserCreate, db: AbstractDatabase = Depends(get_db)):
+    query = "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)"
+    hashed_pwd = hash_password(user_data.password)
+    try:
+        await db.execute(query, user_data.name, user_data.email, hashed_pwd)
+    except Exception as e:
+
+        if "unique constraint" in str(e).lower():
+            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=500, detail="Database error: {}".format(e))
+    return {"message": "User created successfully"}
