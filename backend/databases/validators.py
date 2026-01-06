@@ -18,12 +18,10 @@ class UserUpdate(BaseModel):
 class DocumentCreate(BaseModel):
     title: str
     content: str
-    owner_id: int
     
 class DocumentUpdate(BaseModel):
     title: str
     content: str
-    updated_at: datetime
 
 # RESPONSE VALIDATORS
 

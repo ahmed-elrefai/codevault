@@ -5,11 +5,11 @@ import { api } from '../api/client';
 
 import { useNavigate } from 'react-router-dom';
 
-const SnippetEditor = ({ code, onSave }) => {
+const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
     const navigate = useNavigate();
     const { user, setModalOpen } = useAuth();
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState(code);
+    const [title, setTitle] = useState(initialSnippet?.title || '');
+    const [content, setContent] = useState(initialSnippet?.content || code);
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -27,17 +27,32 @@ const SnippetEditor = ({ code, onSave }) => {
                 return;
             }
 
-            await api.documents.create({
-                title,
-                content,
-                owner_id: user.id
-            });
+            if (initialSnippet && initialSnippet.id) {
+                // Update existing
+                await api.documents.update(initialSnippet.id, {
+                    title,
+                    content
+                });
+            } else {
+                // Create new
+                await api.documents.create({
+                    title,
+                    content
+                });
+            }
 
             alert('Snippet saved successfully!');
             if (onSave) onSave();
 
-            // Redirect to dashboard
-            navigate('/dashboard');
+            // Redirect to dashboard only if creating new, or close modal if updating?
+            // User requested redirection logic. If updating in dashboard, maybe just close.
+            // But for consistency let's stick to simple success message + callback.
+            // If onSave is passed (like from Dashboard), we rely on that.
+            // If dragging and dropping on home, we might want redirect.
+
+            if (!initialSnippet) {
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error('Save failed', err);
             alert(`Failed to save: ${err.message}`);

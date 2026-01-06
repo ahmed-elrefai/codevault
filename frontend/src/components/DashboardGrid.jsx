@@ -50,7 +50,7 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
                         <button
                             onClick={(e) => {
                                 e.stopPropagation(); // Prevent card click
-                                if (window.confirm('Delete this snippet?')) onDelete(snippet.id);
+                                onDelete(snippet.id);
                             }}
                             className="btn-ghost"
                             style={{ color: 'var(--color-error)', padding: '4px' }}
@@ -78,7 +78,7 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
                         <Calendar size={14} />
-                        <span>{new Date().toLocaleDateString()}</span>
+                        <span>{new Date(snippet.updated_at || snippet.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
                 </motion.div>
             ))}

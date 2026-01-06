@@ -8,15 +8,10 @@ from backend.databases.schema import create_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("initializing database...")
     await db_instance.initialize()
-    print("connection pool created...")
     await create_tables(db_instance)
-    print("tables created...")
-    print("Database initialized successfully!")
     yield
     await db_instance.close()
-    print("Database connection closed")
 
 app = FastAPI(lifespan=lifespan)
 

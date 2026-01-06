@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import DashboardGrid from './DashboardGrid';
 import SearchBar from './SearchBar';
+import ConfirmationModal from './ConfirmationModal';
 import SnippetEditor from './SnippetEditor';
 import { X } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const Dashboard = () => {
     const [snippets, setSnippets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSnippet, setSelectedSnippet] = useState(null);
+    const [snippetToDelete, setSnippetToDelete] = useState(null);
 
     const fetchSnippets = async () => {
         try {
@@ -24,10 +26,16 @@ const Dashboard = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const onRequestDelete = (id) => {
+        setSnippetToDelete(id);
+    }
+
+    const confirmDelete = async () => {
+        if (!snippetToDelete) return;
         try {
-            await api.documents.delete(id);
-            setSnippets(prev => prev.filter(s => s.id !== id));
+            await api.documents.delete(snippetToDelete);
+            setSnippets(prev => prev.filter(s => s.id !== snippetToDelete));
+            setSnippetToDelete(null);
         } catch (err) {
             alert('Failed to delete snippet');
             console.error(err);
@@ -64,8 +72,18 @@ const Dashboard = () => {
             {loading ? (
                 <div>Loading snippets...</div>
             ) : (
-                <DashboardGrid snippets={snippets} onDelete={handleDelete} onView={setSelectedSnippet} />
+                <DashboardGrid snippets={snippets} onDelete={onRequestDelete} onView={setSelectedSnippet} />
             )}
+
+            <ConfirmationModal
+                isOpen={!!snippetToDelete}
+                title="Delete Snippet?"
+                message="Are you sure you want to delete this code snippet? This action cannot be undone."
+                confirmText="Yes, Delete it"
+                isDanger={true}
+                onConfirm={confirmDelete}
+                onCancel={() => setSnippetToDelete(null)}
+            />
 
             {selectedSnippet && (
                 <div className="modal-overlay" style={{
@@ -85,9 +103,10 @@ const Dashboard = () => {
                         </button>
                         <SnippetEditor
                             code={selectedSnippet.content}
+                            initialSnippet={selectedSnippet}
                             onSave={() => {
                                 setSelectedSnippet(null);
-                                fetchSnippets(); // Refresh after edit/save if we supported edit
+                                fetchSnippets(); // Refresh after edit/save
                             }}
                         />
                     </div>
