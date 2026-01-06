@@ -1,0 +1,131 @@
+import React, { useState } from 'react';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import AuthModal from './components/AuthModal';
+import CodeDropZone from './components/CodeDropZone';
+import SnippetEditor from './components/SnippetEditor';
+import Dashboard from './components/Dashboard';
+import { Code, LogOut, User as UserIcon } from 'lucide-react';
+
+const Layout = ({ children }) => {
+  const { user, logout, setModalOpen } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <nav style={{
+        borderBottom: '1px solid var(--color-border)',
+        padding: 'var(--spacing-md) 0',
+        backgroundColor: 'rgba(10,10,10,0.8)',
+        backdropFilter: 'blur(10px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10
+      }}>
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
+            <div style={{ background: 'var(--color-primary)', borderRadius: '6px', padding: '4px' }}>
+              <Code size={24} color="#000" />
+            </div>
+            <span style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
+              CodeVault
+            </span>
+          </Link>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="btn btn-ghost" style={{ color: location.pathname === '/dashboard' ? 'var(--color-primary)' : 'inherit' }}>
+                  Dashboard
+                </Link>
+                <div style={{ width: '1px', height: '24px', background: 'var(--color-border)' }}></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                  <UserIcon size={18} />
+                  <span style={{ fontSize: '0.9rem' }}>{user.name}</span>
+                </div>
+                <button onClick={() => { logout(); navigate('/'); }} className="btn btn-ghost" title="Logout">
+                  <LogOut size={18} />
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setModalOpen(true)} className="btn btn-primary">
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      <main style={{ flex: 1, padding: 'var(--spacing-xl) 0' }}>
+        {children}
+      </main>
+
+      <AuthModal />
+    </div>
+  );
+};
+
+const HomePage = () => {
+  const [code, setCode] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const handleCodeDropped = (droppedCode) => {
+    setAnalyzing(true);
+    // Mock LLM Analysis Time
+    setTimeout(() => {
+      setCode(droppedCode);
+      setAnalyzing(false);
+    }, 1500);
+  };
+
+  const reset = () => {
+    setCode(null);
+  }
+
+  return (
+    <div className="container">
+      {!code ? (
+        <div style={{ maxWidth: '800px', margin: '4rem auto', textAlign: 'center' }}>
+          {analyzing ? (
+            <div style={{ padding: '4rem', color: 'var(--color-primary)' }}>
+              <h2>Analyzing Code...</h2>
+              <p style={{ color: 'var(--color-text-muted)' }}>Extracting semantics and generating documentation.</p>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1 }}>
+                Save your code snippets <br />
+                <span style={{ color: 'var(--color-primary)' }}>for the future.</span>
+              </h1>
+              <p style={{ fontSize: '1.2rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-2xl)', maxWidth: '600px', marginInline: 'auto' }}>
+                Drop any code snippet here. We'll document it, tag it, and make it searchable for when you need it again.
+              </p>
+              <CodeDropZone onCodeDropped={handleCodeDropped} />
+            </>
+          )}
+        </div>
+      ) : (
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <button onClick={reset} className="btn btn-ghost" style={{ marginBottom: 'var(--spacing-md)' }}>← Drop new code</button>
+          <SnippetEditor code={code} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Layout>
+    </AuthProvider>
+  );
+};
+
+export default App;

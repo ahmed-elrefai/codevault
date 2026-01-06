@@ -11,17 +11,37 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/token")
 async def get_token(user_data: UserLogin, db: AbstractDatabase = Depends(get_db)):
-    user = await db.fetchrow("SELECT name, email, password FROM users WHERE email = $1", user_data.email)
+    print(f"Login attempt for: {user_data.email}")
+    user = await db.fetchrow("SELECT name, email, password, id FROM users WHERE email = $1", user_data.email)
+    
     if not user:
+        print("User not found in DB")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
-    if not verify_password(user_data.password, user.password):
+    
+    # Check if user is dict or object
+    print(f"User found: {user}")
+    
+    # Handle both dict and object access just in case, though fetchrow returns dict-like usually
+    stored_password = user['password'] if isinstance(user, dict) else user.password
+    
+    if not verify_password(user_data.password, stored_password):
+        print("Password verification failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+    
+    print("Login successful")
+    
+    # helper to get ID safely
+    user_id = user['id'] if isinstance(user, dict) else user.id
 
-    access_token = create_access_token(user_id=user.id)
+    access_token = create_access_token(user_id=user_id)
     return {"access_token": access_token, "token_type": "bearer"}
 
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(token: str, db: AbstractDatabase = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AbstractDatabase = Depends(get_db)):
     user_id = verify_access_token(token)
     user = await db.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
     if not user:
