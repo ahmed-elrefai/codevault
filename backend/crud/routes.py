@@ -36,6 +36,7 @@ async def create_user(user: UserCreate, db: AbstractDatabase = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Email already registered")
         raise HTTPException(status_code=500, detail="Database error: {}".format(e))
     return {"message": "User created successfully"}
+    
 
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(user_id: int, user: UserUpdate, db: AbstractDatabase = Depends(get_db)):

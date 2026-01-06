@@ -38,3 +38,8 @@ class DocumentResponse(BaseModel):
     content: str
     created_at: datetime
     updated_at: datetime
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

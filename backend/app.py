@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from crud.routes import router
+from auth.auth import router as auth_router
+from crud.routes import router as crud_router
 from contextlib import asynccontextmanager
 from databases.db import get_db, db_instance
 from databases.schema import create_tables
@@ -18,4 +19,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(crud_router)
