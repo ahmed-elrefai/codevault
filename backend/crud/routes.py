@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 import os
-from settings import ROOT_DIR
-from databases.db import AbstractDatabase, get_db
-from databases.validators import (UserCreate, UserUpdate, UserResponse,
+import os
+from backend.settings import ROOT_DIR
+from backend.databases.db import AbstractDatabase, get_db
+from backend.databases.validators import (UserCreate, UserUpdate, UserResponse,
                                 DocumentCreate, DocumentUpdate, DocumentResponse)
-from utils.security import hash_password 
+from backend.utils.security import hash_password 
 
 
-from auth.auth import get_current_user
+from backend.auth.auth import get_current_user
 router = APIRouter(prefix=os.getenv("ROOT_ENDPOINT"))
 
 @router.get("/users", response_model=list[UserResponse])

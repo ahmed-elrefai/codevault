@@ -1,15 +1,20 @@
 from passlib.context import CryptContext
 import hashlib
-from datetime import datetime, timedelta
-from .. import settings
+from datetime import datetime, timedelta,UTC
+from backend import settings
 from jose import jwt
+import os
+
 # Define the hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-with open("private_key.pem", "rb") as f:
+private_key_path = os.path.join(settings.ROOT_DIR, "private_key.pem")
+public_key_path = os.path.join(settings.ROOT_DIR, "public_key.pem")
+
+with open(private_key_path, "rb") as f:
     PRIVATE_KEY = f.read()
 
-with open("public_key.pem", "rb") as f:
+with open(public_key_path, "rb") as f:
     PUBLIC_KEY = f.read()
 
 ALGORITHM = "RS256"
@@ -27,7 +32,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(user_id: int):
     payload = {
         "user_id": user_id,
-        "exp": datetime.utcnow() + timedelta(hours=24)
+        "exp": datetime.now(UTC) + timedelta(hours=24)
     }
     return jwt.encode(payload, PRIVATE_KEY, algorithm=ALGORITHM)
 

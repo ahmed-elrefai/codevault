@@ -7,3 +7,6 @@ bcrypt==3.2.0
 pydantic[email]
 python-jose[cryptography]
 python-multipart
+pytest
+pytest-asyncio
+httpx

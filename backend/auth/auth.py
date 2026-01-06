@@ -1,10 +1,11 @@
 from starlette import status
-from databases.validators import UserLogin
-from databases.db import AbstractDatabase, get_db
-from utils.security import verify_password, create_access_token, verify_access_token,hash_password
+from starlette import status
+from backend.databases.validators import UserLogin
+from backend.databases.db import AbstractDatabase, get_db
+from backend.utils.security import verify_password, create_access_token, verify_access_token,hash_password
 from fastapi import HTTPException
 from fastapi import APIRouter, Depends
-from databases.validators import UserResponse, UserCreate
+from backend.databases.validators import UserResponse, UserCreate
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
