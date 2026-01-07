@@ -13,7 +13,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def get_token(user_data: UserLogin, db: AbstractDatabase = Depends(get_db)):
     user = await db.fetchrow("SELECT name, email, password, id FROM users WHERE email = $1", user_data.email)
     
-    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+
     # Check if user is dict or object
     # Handle both dict and object access just in case, though fetchrow returns dict-like usually
     stored_password = user['password'] if isinstance(user, dict) else user.password

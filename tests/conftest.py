@@ -49,7 +49,7 @@ class MockDatabase(db_module.AbstractDatabase):
                     return self[name]
                 raise AttributeError(f"'Record' object has no attribute '{name}'")
 
-        if "SELECT name, email, password FROM users" in query:
+        if "SELECT name, email, password, id FROM users" in query:
             # Login check
             for user in self.users:
                 if user["email"] == args[0]:
