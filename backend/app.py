@@ -13,7 +13,18 @@ async def lifespan(app: FastAPI):
     yield
     await db_instance.close()
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 app = FastAPI(lifespan=lifespan)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print(f"Validation Error: {exc}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body},
+    )
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,5 +41,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from backend.semantix.llms import router as ai_router
+
 app.include_router(auth_router)
 app.include_router(crud_router)
+app.include_router(ai_router)

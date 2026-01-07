@@ -20,7 +20,18 @@ async def create_documents_table(db: AbstractDatabase):
         "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
     )
 
+async def create_analyzer_keys_table(db: AbstractDatabase):
+    await db.create_table(
+        "analyzer_keys", 
+        "id SERIAL PRIMARY KEY",
+        "user_id INTEGER NOT NULL",
+        "token TEXT NOT NULL",
+        "expiry_date TIMESTAMPTZ NOT NULL",
+        "trials_left INTEGER NOT NULL"
+    )
+
 async def create_tables(db: AbstractDatabase):
     await create_users_table(db)
     await create_documents_table(db)
+    await create_analyzer_keys_table(db)
 

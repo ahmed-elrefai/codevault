@@ -39,6 +39,16 @@ export const api = {
             }),
 
         me: () => api.request('/auth/me'),
+
+        getAnalyzerKey: () => api.request('/auth/get_analyzer_key'),
+    },
+
+    ai: {
+        analyzeCode: (code, apiKey) =>
+            api.request('/llms/analyze', {
+                method: 'POST',
+                body: JSON.stringify({ user_input: code, analyzer_key: apiKey }),
+            }),
     },
 
     documents: {

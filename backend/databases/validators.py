@@ -41,3 +41,14 @@ class DocumentResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+# LLMS
+class ChatQuery(BaseModel):
+    user_input: str
+    analyzer_key: str
+
+class AnalyzerKey(BaseModel):
+    user_id: int
+    token: str
+    expiry_date: datetime
+    trials_left: int

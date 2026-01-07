@@ -4,6 +4,9 @@ from datetime import datetime, timedelta,UTC
 from backend import settings
 from jose import jwt
 import os
+from secrets import token_urlsafe
+from fastapi import HTTPException, Depends
+from backend.databases.validators import AnalyzerKey
 
 # Define the hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -28,13 +31,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     pre_hashed = hashlib.sha256(plain_password.encode()).hexdigest()
     return pwd_context.verify(pre_hashed, hashed_password)
 
-
 def create_access_token(user_id: int):
     payload = {
         "user_id": user_id,
         "exp": datetime.now(UTC) + timedelta(hours=24)
     }
+
     return jwt.encode(payload, PRIVATE_KEY, algorithm=ALGORITHM)
+
 
 def verify_access_token(token: str):
     try:

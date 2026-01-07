@@ -50,7 +50,7 @@ class Postgres(AbstractDatabase):
     async def fetchrow(self, query: str, *args):
         async with self.pool.acquire() as connection:
             record = await connection.fetchrow(query, *args)
-            return dict(record)
+            return dict(record) if record else None
     
     async def create_table(self, table_name: str, *columns: str):
         query = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(columns)})"
