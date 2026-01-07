@@ -5,7 +5,27 @@ import AuthModal from './components/AuthModal';
 import CodeDropZone from './components/CodeDropZone';
 import SnippetEditor from './components/SnippetEditor';
 import Dashboard from './components/Dashboard';
-import { Code, LogOut, User as UserIcon } from 'lucide-react';
+import { Code, LogOut, User as UserIcon, Search, Zap, Shield } from 'lucide-react';
+
+const Footer = () => (
+  <footer style={{
+    borderTop: '1px solid var(--color-border)',
+    padding: 'var(--spacing-xl) 0',
+    marginTop: 'auto',
+    backgroundColor: 'var(--color-background)'
+  }}>
+    <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+      <div>
+        &copy; {new Date().getFullYear()} CodeVault. All rights reserved.
+      </div>
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+        <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
+        <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</Link>
+        <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Twitter</Link>
+      </div>
+    </div>
+  </footer>
+);
 
 const Layout = ({ children }) => {
   const { user, logout, setModalOpen } = useAuth();
@@ -17,19 +37,24 @@ const Layout = ({ children }) => {
       <nav style={{
         borderBottom: '1px solid var(--color-border)',
         padding: 'var(--spacing-md) 0',
-        backgroundColor: 'rgba(10,10,10,0.8)',
-        backdropFilter: 'blur(10px)',
+        backgroundColor: 'var(--color-background)', // Solid background
         position: 'sticky',
         top: 0,
         zIndex: 10
       }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
-            <div style={{ background: 'var(--color-primary)', borderRadius: '6px', padding: '4px' }}>
-              <Code size={24} color="#000" />
+            <div className="brand-logo-gradient" style={{ borderRadius: '8px', padding: '6px' }}>
+              <Code size={20} color="#000" strokeWidth={2.5} />
             </div>
-            <span style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
-              CodeVault
+            <span style={{
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              letterSpacing: '-1px',
+              color: 'var(--color-text)',
+              fontFamily: 'var(--font-mono)'
+            }}>
+              CodeVault<span style={{ color: 'var(--color-primary)' }}>.</span>
             </span>
           </Link>
 
@@ -61,10 +86,29 @@ const Layout = ({ children }) => {
         {children}
       </main>
 
+      <Footer />
       <AuthModal />
     </div>
   );
 };
+
+const FeatureCard = ({ icon, title, description }) => (
+  <div style={{
+    padding: 'var(--spacing-lg)',
+    background: 'rgba(255,255,255,0.03)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-sm)'
+  }}>
+    <div style={{ color: 'var(--color-primary)', marginBottom: 'var(--spacing-xs)' }}>
+      {icon}
+    </div>
+    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{title}</h3>
+    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>{description}</p>
+  </div>
+);
 
 const HomePage = () => {
   const [code, setCode] = useState(null);
@@ -97,23 +141,48 @@ const HomePage = () => {
   return (
     <div className="container">
       {!code ? (
-        <div style={{ maxWidth: '800px', margin: '4rem auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: '1000px', margin: '4rem auto', textAlign: 'center', position: 'relative' }}>
+          <div className="hero-glow" />
           {analyzing ? (
             <div style={{ padding: '4rem', color: 'var(--color-primary)' }}>
               <h2>Analyzing Code...</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Extracting semantics and generating documentation.</p>
             </div>
           ) : (
-            <>
-              <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1 }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                 Save your code snippets <br />
-                <span style={{ color: 'var(--color-primary)' }}>for the future.</span>
+                <span className="text-gradient-animated">the official sponsor for Copy & Paste</span>
               </h1>
-              <p style={{ fontSize: '1.2rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-2xl)', maxWidth: '600px', marginInline: 'auto' }}>
+              <p style={{ fontSize: '1.15rem', color: 'var(--color-text-muted)', marginBottom: '5rem', maxWidth: '700px', marginInline: 'auto', lineHeight: 1.6 }}>
                 Drop any code snippet here. We'll document it, tag it, and make it searchable for when you need it again.
               </p>
               <CodeDropZone onCodeDropped={handleCodeDropped} />
-            </>
+
+              <div style={{
+                marginTop: '8rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '2rem',
+                textAlign: 'left'
+              }}>
+                <FeatureCard
+                  icon={<Search size={28} />}
+                  title="Semantic Search"
+                  description="Don't remember the exact function name? Just describe what it does, and we'll find it for you."
+                />
+                <FeatureCard
+                  icon={<Zap size={28} />}
+                  title="Lightning Fast"
+                  description="Optimized for speed. Your snippets are indexed and ready to be pasted in milliseconds."
+                />
+                <FeatureCard
+                  icon={<Shield size={28} />}
+                  title="Secure Cloud"
+                  description="Your code is your verified asset. We encrypt and store your snippets safely in the cloud."
+                />
+              </div>
+            </div>
           )}
         </div>
       ) : (
