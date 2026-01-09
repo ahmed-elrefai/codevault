@@ -13,6 +13,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [selectedSnippet, setSelectedSnippet] = useState(null);
     const [snippetToDelete, setSnippetToDelete] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchSnippets = async () => {
         try {
@@ -43,14 +44,17 @@ const Dashboard = () => {
     };
 
     const handleSearch = (query) => {
-        // ... same as before or improve
-        if (query) {
-            // Client side filter for demo, or API call
-            setSnippets(prev => prev.filter(s => s.title.toLowerCase().includes(query.toLowerCase()) || s.content.includes(query)));
-        } else {
-            fetchSnippets();
-        }
+        setSearchQuery(query);
     };
+
+    const filteredSnippets = React.useMemo(() => {
+        if (!searchQuery) return snippets;
+        const lowerQuery = searchQuery.toLowerCase();
+        return snippets.filter(s =>
+            s.title.toLowerCase().includes(lowerQuery) ||
+            s.content.toLowerCase().includes(lowerQuery)
+        );
+    }, [snippets, searchQuery]);
 
     useEffect(() => {
         if (user) {
@@ -72,7 +76,7 @@ const Dashboard = () => {
             {loading ? (
                 <div>Loading snippets...</div>
             ) : (
-                <DashboardGrid snippets={snippets} onDelete={onRequestDelete} onView={setSelectedSnippet} />
+                <DashboardGrid snippets={filteredSnippets} onDelete={onRequestDelete} onView={setSelectedSnippet} />
             )}
 
             <ConfirmationModal
