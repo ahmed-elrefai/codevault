@@ -15,5 +15,3 @@ class Document(BaseModel):
     owner_id: int
     created_at: datetime = datetime.now(datetime.timezone.utc)
     updated_at: datetime = datetime.now(datetime.timezone.utc)
-
-
