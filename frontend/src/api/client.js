@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000'; // Adjust as needed
+const API_BASE_URL = 'https://codevault-backend-ten.vercel.app'; // Production Vercel URL
 
 let getTokenFn = null;
 
