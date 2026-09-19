@@ -18,7 +18,7 @@ const Footer = () => (
   }}>
     <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
       <div>
-        &copy; {new Date().getFullYear()} CodeVault. All rights reserved.
+        &copy; {new Date().getFullYear()} Codevlt. All rights reserved.
       </div>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
         <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
@@ -28,6 +28,90 @@ const Footer = () => (
     </div>
   </footer>
 );
+
+export const emitTrialUsed = () => window.dispatchEvent(new Event('trialUsed'));
+
+const AITrialsIndicator = () => {
+  const [trials, setTrials] = useState(null);
+  const [expiry, setExpiry] = useState(null);
+  const [tick, setTick] = useState(0);
+  const { user } = useUser();
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    let interval;
+    if (trials === 0 && expiry) {
+      interval = setInterval(() => {
+        const diff = new Date(expiry) - new Date();
+        if (diff <= 0) {
+          window.dispatchEvent(new Event('trialUsed')); // Trigger a refetch
+        } else {
+          setTick(t => t + 1);
+        }
+      }, 60000);
+    }
+    return () => clearInterval(interval);
+  }, [trials, expiry]);
+
+  useEffect(() => {
+    const fetchTrials = async () => {
+      if (user) {
+        try {
+          const { api, setTokenFetcher } = await import('./api/client');
+          setTokenFetcher(getToken);
+          const key = await api.auth.getAnalyzerKey();
+          setTrials(key.trials_left);
+          setExpiry(key.expiry_date);
+        } catch (error) {
+          console.error("Failed to fetch trials:", error);
+        }
+      }
+    };
+    fetchTrials();
+    window.addEventListener('trialUsed', fetchTrials);
+    return () => window.removeEventListener('trialUsed', fetchTrials);
+  }, [user, getToken]);
+
+  if (!user || trials === null) return null;
+
+  let refreshText = null;
+  if (trials === 0 && expiry) {
+    const diff = new Date(expiry) - new Date();
+    if (diff > 0) {
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      refreshText = hours > 0 ? `Refreshes in ${hours}h ${minutes}m` : `Refreshes in ${minutes}m`;
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      {refreshText && (
+        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+          {refreshText}
+        </span>
+      )}
+      <div 
+        title="AI Analysis Trials Remaining"
+        style={{ 
+          fontSize: '0.9rem', 
+          color: 'var(--color-text)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.35rem', 
+          background: 'rgba(255,255,255,0.08)', 
+          padding: '0.4rem 0.75rem', 
+          borderRadius: '8px', 
+          fontWeight: 600,
+          cursor: 'default'
+        }}
+      >
+        <Zap size={16} color={trials > 0 ? "var(--color-primary)" : "var(--color-text-muted)"} style={{ fill: trials > 0 ? "var(--color-primary)" : "none" }} />
+        <span>{trials}</span>
+      </div>
+    </div>
+  );
+};
 
 const Layout = ({ children }) => {
   const { user, isLoaded } = useUser();
@@ -47,7 +131,7 @@ const Layout = ({ children }) => {
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
             <div style={{ borderRadius: '10px', overflow: 'hidden', display: 'flex', alignItems: 'center', width: '44px', height: '44px' }}>
-              <img src="/logo.jpg" alt="CodeVault Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/logo.jpg" alt="Codevlt Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <span style={{
               fontSize: '1.25rem',
@@ -56,17 +140,21 @@ const Layout = ({ children }) => {
               color: 'var(--color-text)',
               fontFamily: 'var(--font-mono)'
             }}>
-              CodeVault<span style={{ color: 'var(--color-primary)' }}>.</span>
+              Codevlt<span style={{ color: 'var(--color-primary)' }}>.</span>
             </span>
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+            <Link to="/about" className="btn btn-ghost" style={{ color: location.pathname === '/about' ? 'var(--color-primary)' : 'inherit' }}>
+              About
+            </Link>
             
             <SignedIn>
               <Link to="/dashboard" className="btn btn-ghost" style={{ color: location.pathname === '/dashboard' ? 'var(--color-primary)' : 'inherit' }}>
                 Dashboard
               </Link>
               <div style={{ width: '1px', height: '24px', background: 'var(--color-border)' }}></div>
+              <AITrialsIndicator />
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             
@@ -109,6 +197,7 @@ const FeatureCard = ({ icon, title, description }) => (
 
 import { api } from './api/client';
 import AnalysisResult from './components/AnalysisResult';
+import About from './components/About';
 
 const HomePage = () => {
   const [code, setCode] = useState(null);
@@ -116,6 +205,7 @@ const HomePage = () => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const { user } = useUser();
   const { openSignIn } = useClerk();
+  const [useAI, setUseAI] = useState(true);
   
   const [wordIndex, setWordIndex] = useState(0);
   const rotatingWords = ["clickable", "pasteable", "shareable"];
@@ -168,9 +258,15 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
   };
 
   const handleCodeDropped = async (droppedCode) => {
-    if (!user) {
+    if (!user && useAI) {
       alert("Please sign in to use the AI Documentor.");
       openSignIn();
+      return;
+    }
+
+    if (!useAI) {
+      setCode(droppedCode);
+      setAnalysisResult(null);
       return;
     }
 
@@ -181,13 +277,15 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
 
       // 2. Call AI Service
       const result = await api.ai.analyzeCode(droppedCode, key.token);
+      emitTrialUsed();
 
       const docString = formatDocs(result);
       setAnalysisResult(result);
       setCode(docString + droppedCode);
     } catch (error) {
       console.error("Analysis Failed:", error);
-      alert("Failed to analyze code: " + error.message);
+      alert("AI Analysis failed, loading the snippet as-is. (" + error.message + ")");
+      setCode(droppedCode); // Fallback to the raw snippet
     } finally {
       setAnalyzing(false);
     }
@@ -201,7 +299,7 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
   return (
     <div className="container">
       {!code ? (
-        <div style={{ maxWidth: '1000px', margin: '4rem auto', textAlign: 'center', position: 'relative' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto 4rem', textAlign: 'center', position: 'relative' }}>
           <div className="hero-glow" />
           {analyzing ? (
             <div style={{ padding: '4rem', color: 'var(--color-primary)' }}>
@@ -214,34 +312,78 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 animation: 'spin 1s linear infinite'
               }} />
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-              <h2>Validating with CodeVault AI...</h2>
+              <h2>Validating with Codevlt AI...</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Extracting semantics, complexity, and tags.</p>
             </div>
           ) : (
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <h1 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3em', flexWrap: 'wrap' }}>
-                Make your code
-                <span style={{ position: 'relative', display: 'inline-block', width: '220px', textAlign: 'left' }}>
-                  <AnimatePresence>
-                    <motion.span
-                      className="text-gradient-animated"
-                      key={rotatingWords[wordIndex]}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -20, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      style={{ position: 'absolute', left: 0 }}
-                    >
-                      {rotatingWords[wordIndex]}
-                    </motion.span>
-                  </AnimatePresence>
-                  <span style={{ visibility: 'hidden' }}>shareable</span>
-                </span>
-              </h1>
-              <p style={{ fontSize: '1.25rem', color: 'var(--color-text-muted)', marginBottom: '5rem', maxWidth: '700px', marginInline: 'auto', lineHeight: 1.6 }}>
-                Drop a checkpoint link anywhere. Your audience clicks once, and the code is already in their clipboard.
-              </p>
-              <CodeDropZone onCodeDropped={handleCodeDropped} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', alignItems: 'center', textAlign: 'left', marginBottom: '4rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.3em', flexWrap: 'wrap' }}>
+                    Make your code
+                    <span style={{ position: 'relative', display: 'inline-block', width: '220px', textAlign: 'left' }}>
+                      <AnimatePresence>
+                        <motion.span
+                          className="text-gradient-animated"
+                          key={rotatingWords[wordIndex]}
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -20, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          style={{ position: 'absolute', left: 0 }}
+                        >
+                          {rotatingWords[wordIndex]}
+                        </motion.span>
+                      </AnimatePresence>
+                      <span style={{ visibility: 'hidden' }}>shareable</span>
+                    </span>
+                  </h1>
+                  <p style={{ fontSize: '1.25rem', color: 'var(--color-text-muted)', marginBottom: '3rem', maxWidth: '500px', lineHeight: 1.6 }}>
+                    Drop a checkpoint link anywhere. Your audience clicks once, and the code is already in their clipboard.
+                  </p>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ color: useAI ? 'var(--color-primary)' : 'var(--color-text-muted)', fontSize: '0.95rem', fontWeight: useAI ? '600' : '400', transition: 'all 0.2s' }}>Use AI Analysis</span>
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '46px',
+                      height: '24px'
+                    }}>
+                      <input 
+                        type="checkbox" 
+                        checked={useAI} 
+                        onChange={(e) => setUseAI(e.target.checked)}
+                        style={{ opacity: 0, width: 0, height: 0 }} 
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: useAI ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)',
+                        transition: '.4s',
+                        borderRadius: '24px'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          content: '""',
+                          height: '18px',
+                          width: '18px',
+                          left: useAI ? '24px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '.4s',
+                          borderRadius: '50%'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <CodeDropZone onCodeDropped={handleCodeDropped} />
+                </div>
+              </div>
 
               <div style={{
                 marginTop: '8rem',
@@ -272,17 +414,17 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 textAlign: 'center',
                 paddingBottom: '5rem'
               }}>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why CodeVault?</h2>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why Codevlt?</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', textAlign: 'left' }}>
                   <FeatureCard
                     icon={<Video size={28} />}
                     title="Dev Content Creators"
-                    description="Stop making your audience manually type code from your videos. Drop a CodeVault checkpoint link in your description so they can copy exactly what you wrote."
+                    description="Stop making your audience manually type code from your videos. Drop a Codevlt checkpoint link in your description so they can copy exactly what you wrote."
                   />
                   <FeatureCard
                     icon={<GraduationCap size={28} />}
                     title="Programming Tutors & Students"
-                    description="Share assignments, examples, and boilerplate perfectly. CodeVault provides instantly accessible, formatted code that speeds up the learning process."
+                    description="Share assignments, examples, and boilerplate perfectly. Codevlt provides instantly accessible, formatted code that speeds up the learning process."
                   />
                   <FeatureCard
                     icon={<Users size={28} />}
@@ -320,6 +462,7 @@ const AppContent = () => {
     <Layout>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/sn/:documentId" element={<SnippetLink />} />
       </Routes>
