@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import AuthModal from './components/AuthModal';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useClerk, useAuth } from '@clerk/clerk-react';
+import { setTokenFetcher } from './api/client';
 import CodeDropZone from './components/CodeDropZone';
 import SnippetEditor from './components/SnippetEditor';
 import Dashboard from './components/Dashboard';
-import { Code, LogOut, User as UserIcon, Search, Zap, Shield } from 'lucide-react';
+import SnippetLink from './components/SnippetLink';
+import { Code, LogOut, User as UserIcon, Search, Zap, Shield, Video, GraduationCap, Users, Wallet, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Footer = () => (
   <footer style={{
@@ -28,7 +30,7 @@ const Footer = () => (
 );
 
 const Layout = ({ children }) => {
-  const { user, logout, setModalOpen } = useAuth();
+  const { user, isLoaded } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,8 +46,8 @@ const Layout = ({ children }) => {
       }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
-            <div className="brand-logo-gradient" style={{ borderRadius: '8px', padding: '6px' }}>
-              <Code size={20} color="#000" strokeWidth={2.5} />
+            <div style={{ borderRadius: '10px', overflow: 'hidden', display: 'flex', alignItems: 'center', width: '44px', height: '44px' }}>
+              <img src="/logo.jpg" alt="CodeVault Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <span style={{
               fontSize: '1.25rem',
@@ -59,25 +61,21 @@ const Layout = ({ children }) => {
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-            {user ? (
-              <>
-                <Link to="/dashboard" className="btn btn-ghost" style={{ color: location.pathname === '/dashboard' ? 'var(--color-primary)' : 'inherit' }}>
-                  Dashboard
-                </Link>
-                <div style={{ width: '1px', height: '24px', background: 'var(--color-border)' }}></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                  <UserIcon size={18} />
-                  <span style={{ fontSize: '0.9rem' }}>{user.name}</span>
-                </div>
-                <button onClick={() => { logout(); navigate('/'); }} className="btn btn-ghost" title="Logout">
-                  <LogOut size={18} />
-                </button>
-              </>
-            ) : (
-              <button onClick={() => setModalOpen(true)} className="btn btn-primary">
-                Sign In
-              </button>
-            )}
+            
+            <SignedIn>
+              <Link to="/dashboard" className="btn btn-ghost" style={{ color: location.pathname === '/dashboard' ? 'var(--color-primary)' : 'inherit' }}>
+                Dashboard
+              </Link>
+              <div style={{ width: '1px', height: '24px', background: 'var(--color-border)' }}></div>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="btn btn-primary">Sign In</button>
+              </SignInButton>
+            </SignedOut>
+            
           </div>
         </div>
       </nav>
@@ -87,7 +85,6 @@ const Layout = ({ children }) => {
       </main>
 
       <Footer />
-      <AuthModal />
     </div>
   );
 };
@@ -117,7 +114,18 @@ const HomePage = () => {
   const [code, setCode] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const { user, setModalOpen } = useAuth();
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
+  
+  const [wordIndex, setWordIndex] = useState(0);
+  const rotatingWords = ["clickable", "pasteable", "shareable"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % rotatingWords.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   const formatDocs = (result) => {
     const { description, tags, time_complexity, space_complexity, language } = result;
@@ -136,35 +144,33 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
 """
 
 `;
-    }
-
-    if (isHtmlStyle) {
+    } else if (isHtmlStyle) {
       return `<!--
-  AI GENERATED DOCUMENTATION
-  --------------------------
-  Description: ${description}
-  Complexity: Time: ${time_complexity} | Space: ${space_complexity}
-  Tags: ${(tags || []).map(t => '#' + t).join(' ')}
+AI GENERATED DOCUMENTATION
+--------------------------
+Description: ${description}
+Complexity: Time: ${time_complexity} | Space: ${space_complexity}
+Tags: ${(tags || []).map(t => '#' + t).join(' ')}
 -->
 
 `;
-    }
-
-    return `/**
+    } else {
+      return `/**
  * AI GENERATED DOCUMENTATION
  * --------------------------
- * @description ${description}
- * @complexity Time: ${time_complexity} | Space: ${space_complexity}
- * @tags ${(tags || []).map(t => '#' + t).join(' ')}
+ * Description: ${description}
+ * Complexity: Time: ${time_complexity} | Space: ${space_complexity}
+ * Tags: ${(tags || []).map(t => '#' + t).join(' ')}
  */
 
 `;
+    }
   };
 
   const handleCodeDropped = async (droppedCode) => {
     if (!user) {
       alert("Please sign in to use the AI Documentor.");
-      setModalOpen(true);
+      openSignIn();
       return;
     }
 
@@ -213,12 +219,27 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
             </div>
           ) : (
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-                Save your code snippets <br />
-                <span className="text-gradient-animated">the official sponsor for Copy & Paste</span>
+              <h1 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: 'var(--spacing-lg)', lineHeight: 1.1, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3em', flexWrap: 'wrap' }}>
+                Make your code
+                <span style={{ position: 'relative', display: 'inline-block', width: '220px', textAlign: 'left' }}>
+                  <AnimatePresence>
+                    <motion.span
+                      className="text-gradient-animated"
+                      key={rotatingWords[wordIndex]}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -20, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      style={{ position: 'absolute', left: 0 }}
+                    >
+                      {rotatingWords[wordIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span style={{ visibility: 'hidden' }}>shareable</span>
+                </span>
               </h1>
-              <p style={{ fontSize: '1.15rem', color: 'var(--color-text-muted)', marginBottom: '5rem', maxWidth: '700px', marginInline: 'auto', lineHeight: 1.6 }}>
-                Drop any code snippet here. We'll document it, tag it, and make it searchable for when you need it again.
+              <p style={{ fontSize: '1.25rem', color: 'var(--color-text-muted)', marginBottom: '5rem', maxWidth: '700px', marginInline: 'auto', lineHeight: 1.6 }}>
+                Drop a checkpoint link anywhere. Your audience clicks once, and the code is already in their clipboard.
               </p>
               <CodeDropZone onCodeDropped={handleCodeDropped} />
 
@@ -245,6 +266,31 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                   description="Your code is your verified asset. We encrypt and store your snippets safely in the cloud."
                 />
               </div>
+
+              <div style={{
+                marginTop: '10rem',
+                textAlign: 'center',
+                paddingBottom: '5rem'
+              }}>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why CodeVault?</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', textAlign: 'left' }}>
+                  <FeatureCard
+                    icon={<Video size={28} />}
+                    title="Dev Content Creators"
+                    description="Stop making your audience manually type code from your videos. Drop a CodeVault checkpoint link in your description so they can copy exactly what you wrote."
+                  />
+                  <FeatureCard
+                    icon={<GraduationCap size={28} />}
+                    title="Programming Tutors & Students"
+                    description="Share assignments, examples, and boilerplate perfectly. CodeVault provides instantly accessible, formatted code that speeds up the learning process."
+                  />
+                  <FeatureCard
+                    icon={<Users size={28} />}
+                    title="Teams & Personal"
+                    description="Create a centralized, secure repository for your team's most valuable snippets, scripts, and configurations. Never lose a crucial one-liner again."
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -263,17 +309,26 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
   );
 };
 
-const App = () => {
+const AppContent = () => {
+  const { getToken } = useAuth();
+  
+  useEffect(() => {
+    setTokenFetcher(getToken);
+  }, [getToken]);
+
   return (
-    <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </Layout>
-    </AuthProvider>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/sn/:documentId" element={<SnippetLink />} />
+      </Routes>
+    </Layout>
   );
+};
+
+const App = () => {
+  return <AppContent />;
 };
 
 export default App;

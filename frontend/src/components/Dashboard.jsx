@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useUser } from '@clerk/clerk-react';
 import { api } from '../api/client';
 import DashboardGrid from './DashboardGrid';
 import SearchBar from './SearchBar';
@@ -8,7 +8,7 @@ import SnippetEditor from './SnippetEditor';
 import { X } from 'lucide-react';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user } = useUser();
     const [snippets, setSnippets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSnippet, setSelectedSnippet] = useState(null);
@@ -68,7 +68,7 @@ const Dashboard = () => {
                 <h1 style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)', background: 'linear-gradient(90deg, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     Welcome back, {user?.name || 'Developer'}
                 </h1>
-                <p style={{ color: 'var(--color-text-muted)' }}>Here are your saved code fragments.</p>
+                <p style={{ color: 'var(--color-text-muted)' }}>Here are your securely vaulted code snippets.</p>
             </header>
 
             <SearchBar onSearch={handleSearch} />

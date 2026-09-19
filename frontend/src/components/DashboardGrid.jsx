@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Code, Calendar, Trash2 } from 'lucide-react';
+import { Code, Calendar, Trash2, Link as LinkIcon, Check } from 'lucide-react';
 
 const DashboardGrid = ({ snippets, onDelete, onView }) => {
+    const [copiedId, setCopiedId] = useState(null);
+
+    const handleCopyLink = (e, id) => {
+        e.stopPropagation();
+        const link = `${window.location.origin}/sn/${id}`;
+        navigator.clipboard.writeText(link);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
     if (!snippets || snippets.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-muted)' }}>
@@ -47,17 +57,27 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
                             </h3>
                         </div>
 
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation(); // Prevent card click
-                                onDelete(snippet.id);
-                            }}
-                            className="btn-ghost"
-                            style={{ color: 'var(--color-error)', padding: '4px' }}
-                            title="Delete"
-                        >
-                            <Trash2 size={18} />
-                        </button>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                            <button
+                                onClick={(e) => handleCopyLink(e, snippet.id)}
+                                className="btn-ghost"
+                                style={{ color: 'var(--color-primary)', padding: '4px' }}
+                                title="Copy Link"
+                            >
+                                {copiedId === snippet.id ? <Check size={18} /> : <LinkIcon size={18} />}
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent card click
+                                    onDelete(snippet.id);
+                                }}
+                                className="btn-ghost"
+                                style={{ color: 'var(--color-error)', padding: '4px' }}
+                                title="Delete"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{

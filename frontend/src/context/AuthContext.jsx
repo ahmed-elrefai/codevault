@@ -38,13 +38,19 @@ export const AuthProvider = ({ children }) => {
         await login(email, password); // Auto login after signup
     };
 
+    const resetPassword = async (email) => {
+        // In a real app, call your backend forgot-password API:
+        // await api.auth.resetPassword(email);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, logout, modalOpen, setModalOpen }}>
+        <AuthContext.Provider value={{ user, loading, login, signup, resetPassword, logout, modalOpen, setModalOpen }}>
             {children}
         </AuthContext.Provider>
     );

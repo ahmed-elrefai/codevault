@@ -77,10 +77,10 @@ const CodeDropZone = ({ onCodeDropped }) => {
                 {isDragging ? <FileCode size={64} /> : <Upload size={64} />}
             </motion.div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: 'var(--spacing-sm)', color: 'var(--color-text)' }}>
-                {isDragging ? 'Drop it like it\'s hot!' : 'Drop code here'}
+                {isDragging ? 'Deposit into the Vault...' : 'Deposit code here'}
             </h3>
             <p style={{ textAlign: 'center' }}>
-                Drag & drop a file, or click to paste from clipboard
+                Drag & drop a file, or click to securely paste from clipboard
             </p>
         </motion.div>
     );

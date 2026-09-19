@@ -1,8 +1,20 @@
 const API_BASE_URL = 'http://localhost:8000'; // Adjust as needed
 
+let getTokenFn = null;
+
+export const setTokenFetcher = (fn) => {
+    getTokenFn = fn;
+};
+
 export const api = {
     async request(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
+        let token = null;
+        if (getTokenFn) {
+            token = await getTokenFn();
+        } else {
+            token = localStorage.getItem('token');
+        }
+        
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers,

@@ -64,9 +64,9 @@ async def delete_user(user_id: int, db: AbstractDatabase = Depends(get_db), curr
 @router.post("/documents")
 async def create_document(document: DocumentCreate, db: AbstractDatabase = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
     
-    query = "INSERT INTO documents (title, content, owner_id) VALUES ($1, $2, $3)"
+    query = "INSERT INTO documents (title, content, owner_id, visibility) VALUES ($1, $2, $3, $4)"
     try:
-        await db.execute(query, document.title, document.content, current_user.id)
+        await db.execute(query, document.title, document.content, current_user.id, document.visibility)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Database error: {}".format(e))
     
@@ -105,9 +105,9 @@ async def update_document(document_id: int, document: DocumentUpdate, db: Abstra
         raise HTTPException(status_code=403, detail="Unauthorized to update this document")
 
     # Update without changing owner, and set updated_at
-    query = "UPDATE documents SET title = $2, content = $3, updated_at = NOW() WHERE id = $1 RETURNING *"
+    query = "UPDATE documents SET title = $2, content = $3, visibility = $4, updated_at = NOW() WHERE id = $1 RETURNING *"
     try:
-        result = await db.fetchrow(query, document_id, document.title, document.content)
+        result = await db.fetchrow(query, document_id, document.title, document.content, document.visibility)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Database error: {}".format(e))
     
@@ -136,3 +136,22 @@ async def delete_document(document_id: int, db: AbstractDatabase = Depends(get_d
         raise HTTPException(status_code=500, detail="Database error: {}".format(e))
     
     return {"message": "Document deleted successfully"}
+
+@router.get("/sn/{document_id}")
+async def get_snippet(document_id: int, db: AbstractDatabase = Depends(get_db)):
+    query = "SELECT content, visibility FROM documents WHERE id = $1"
+    try:
+        result = await db.fetchrow(query, document_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Database error: {}".format(e))
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    visibility = result["visibility"] if isinstance(result, dict) else getattr(result, "visibility", None)
+    if visibility != "public":
+        raise HTTPException(status_code=403, detail="This snippet is private")
+        
+    content = result["content"] if isinstance(result, dict) else getattr(result, "content", None)
+    return {"snippet": content}
+

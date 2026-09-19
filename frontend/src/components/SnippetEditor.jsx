@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { Save, Copy, Check } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { api } from '../api/client';
 
 import { useNavigate } from 'react-router-dom';
 
 const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
     const navigate = useNavigate();
-    const { user, setModalOpen } = useAuth();
+    const { user } = useUser();
+    const { openSignIn } = useClerk();
     const [title, setTitle] = useState(initialSnippet?.title || '');
     const [content, setContent] = useState(initialSnippet?.content || code);
+    const [visibility, setVisibility] = useState(initialSnippet?.visibility || 'public');
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const handleSave = async () => {
         if (!user) {
-            setModalOpen(true);
+            openSignIn();
             return;
         }
 
@@ -31,13 +33,15 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
                 // Update existing
                 await api.documents.update(initialSnippet.id, {
                     title,
-                    content
+                    content,
+                    visibility
                 });
             } else {
                 // Create new
                 await api.documents.create({
                     title,
-                    content
+                    content,
+                    visibility
                 });
             }
 
@@ -45,11 +49,6 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
             if (onSave) onSave();
 
             // Redirect to dashboard only if creating new, or close modal if updating?
-            // User requested redirection logic. If updating in dashboard, maybe just close.
-            // But for consistency let's stick to simple success message + callback.
-            // If onSave is passed (like from Dashboard), we rely on that.
-            // If dragging and dropping on home, we might want redirect.
-
             if (!initialSnippet) {
                 navigate('/dashboard');
             }
@@ -94,10 +93,27 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
                         fontSize: '1.1rem',
                         fontWeight: 600,
                         color: 'var(--color-text)',
-                        width: '100%'
+                        width: '100%',
+                        flexGrow: 1
                     }}
                 />
-                <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                    <select
+                        value={visibility}
+                        onChange={(e) => setVisibility(e.target.value)}
+                        style={{
+                            background: 'var(--color-surface)',
+                            color: 'var(--color-text)',
+                            border: '1px solid var(--color-border)',
+                            padding: '0.4rem',
+                            borderRadius: 'var(--radius-sm)',
+                            outline: 'none',
+                            marginRight: '1rem'
+                        }}
+                    >
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                    </select>
                     <button onClick={copyToClipboard} className="btn btn-ghost" title="Copy code">
                         {copied ? <Check size={20} color="var(--color-success)" /> : <Copy size={20} />}
                     </button>

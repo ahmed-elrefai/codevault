@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
+from typing import Literal
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
@@ -18,17 +19,20 @@ class UserUpdate(BaseModel):
 class DocumentCreate(BaseModel):
     title: str
     content: str
+    visibility: Literal["public", "private"] = "public"
     
 class DocumentUpdate(BaseModel):
     title: str
     content: str
+    visibility: Literal["public", "private"] = "public"
 
 # RESPONSE VALIDATORS
 
 class UserResponse(BaseModel):
     id: int
-    name: str
-    email: EmailStr
+    name: str | None = None
+    email: EmailStr | None = None
+    clerk_id: str | None = None
 
 class DocumentResponse(BaseModel):
     id: int
@@ -36,6 +40,8 @@ class DocumentResponse(BaseModel):
     content: str
     created_at: datetime
     updated_at: datetime
+    visibility: Literal["public", "private"]
+    
 
 
 class UserLogin(BaseModel):

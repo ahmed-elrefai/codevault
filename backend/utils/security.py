@@ -1,9 +1,11 @@
 from passlib.context import CryptContext
 import hashlib
-from datetime import datetime, timedelta,UTC
+from datetime import datetime, timedelta, UTC
 from backend import settings
-from jose import jwt
+import jwt
+from jwt import PyJWKClient
 import os
+import base64
 from secrets import token_urlsafe
 from fastapi import HTTPException, Depends
 from backend.databases.validators import AnalyzerKey
@@ -11,16 +13,14 @@ from backend.databases.validators import AnalyzerKey
 # Define the hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-private_key_path = os.path.join(settings.ROOT_DIR, "private_key.pem")
-public_key_path = os.path.join(settings.ROOT_DIR, "public_key.pem")
+# Extract Frontend API URL from Clerk Publishable Key in environment variables
+# Note: In a robust app, you would pass VITE_CLERK_PUBLISHABLE_KEY to the backend .env as well.
+# Since we saw it in backend/.env, we can read it:
+CLERK_PUB_KEY = os.getenv("VITE_CLERK_PUBLISHABLE_KEY", "pk_test_bGlnaHQtY295b3RlLTczMzcuY2xlcmsuYWNjb3VudHMuZGV2JA")
+clerk_domain = base64.b64decode(CLERK_PUB_KEY.split('_')[2][:-2]).decode('utf-8')
+jwks_url = f"https://{clerk_domain}/.well-known/jwks.json"
 
-with open(private_key_path, "rb") as f:
-    PRIVATE_KEY = f.read()
-
-with open(public_key_path, "rb") as f:
-    PUBLIC_KEY = f.read()
-
-ALGORITHM = "RS256"
+jwks_client = PyJWKClient(jwks_url)
 
 def hash_password(password: str) -> str:
     # Pre-hash with SHA256 to ensure length < 72 bytes for bcrypt
@@ -31,18 +31,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     pre_hashed = hashlib.sha256(plain_password.encode()).hexdigest()
     return pwd_context.verify(pre_hashed, hashed_password)
 
-def create_access_token(user_id: int):
-    payload = {
-        "user_id": user_id,
-        "exp": datetime.now(UTC) + timedelta(hours=24)
-    }
-
-    return jwt.encode(payload, PRIVATE_KEY, algorithm=ALGORITHM)
-
-
 def verify_access_token(token: str):
     try:
-        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
-        return payload.get("user_id")
-    except jwt.PyJWTError:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        # Verify token. Clerk uses RS256. 
+        # We don't enforce audience here since Clerk frontend tokens sometimes don't have it by default unless specified
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            options={"verify_aud": False}
+        )
+        # Clerk stores the user's ID in the 'sub' claim
+        return payload.get("sub")
+    except Exception as e:
+        print(f"Token verification failed: {e}")
         return None
