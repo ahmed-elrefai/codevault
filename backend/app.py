@@ -7,12 +7,12 @@ Tags: #python #fastapi #async #database #cors #exception-handling #router
 """
 
 from fastapi import FastAPI
-from . import settings
-from .auth.auth import router as auth_router
-from .crud.routes import router as crud_router
+from backend import settings
+from backend.auth.auth import router as auth_router
+from backend.crud.routes import router as crud_router
 from contextlib import asynccontextmanager
-from .databases.db import get_db, db_instance
-from .databases.schema import create_tables
+from backend.databases.db import get_db, db_instance
+from backend.databases.schema import create_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

@@ -1,4 +1,4 @@
-from .db import AbstractDatabase
+from backend.databases.db import AbstractDatabase
 
 async def create_users_table(db: AbstractDatabase):
     await db.create_table(
