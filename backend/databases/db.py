@@ -32,7 +32,7 @@ class Postgres(AbstractDatabase):
         self.pool = None
 
     async def initialize(self):
-        kwargs = {"min_size": 1, "max_size": 5}
+        kwargs = {"min_size": 1, "max_size": 5, "statement_cache_size": 0}
         if self.dsn and "localhost" not in self.dsn and "127.0.0.1" not in self.dsn:
             kwargs["ssl"] = "require"
         self.pool = await asyncpg.create_pool(self.dsn, **kwargs)
