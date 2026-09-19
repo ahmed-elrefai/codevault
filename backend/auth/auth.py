@@ -84,8 +84,6 @@ async def get_analyzer_key(current_user: UserResponse = Depends(get_current_user
         
     if expiry <= datetime.now(timezone.utc):
         return await refresh_analyzer_key(user_id, db)
-    elif key['trials_left'] <= 0:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No trials left, Wait 24 hours to get more")
     
     return key
 
@@ -105,6 +103,4 @@ async def verify_api_key(token: str, db: AbstractDatabase):
     if key['trials_left'] <= 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No trials left for this key")
 
-    await db.execute("UPDATE analyzer_keys SET trials_left = trials_left - 1 WHERE token = $1", token)
-    
     return key

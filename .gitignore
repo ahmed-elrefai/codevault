@@ -1,0 +1,6 @@
+**/__pycache__/**
+.env
+vaultvenv
+*.pem
+node_modules/
+*.log

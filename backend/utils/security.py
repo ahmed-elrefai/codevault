@@ -40,6 +40,7 @@ def verify_access_token(token: str):
             token,
             signing_key.key,
             algorithms=["RS256"],
+            leeway=60, # 60 seconds of clock skew leeway
             options={"verify_aud": False}
         )
         # Clerk stores the user's ID in the 'sub' claim

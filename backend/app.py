@@ -1,3 +1,11 @@
+"""
+AI GENERATED DOCUMENTATION
+--------------------------
+Description: Sets up a FastAPI application with async database initialization, table creation, CORS middleware, custom validation error handling, and includes authentication, CRUD, and AI routers.
+Complexity: Time: O(1) | Space: O(1)
+Tags: #python #fastapi #async #database #cors #exception-handling #router
+"""
+
 from fastapi import FastAPI
 from . import settings
 from .auth.auth import router as auth_router

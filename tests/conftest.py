@@ -27,13 +27,12 @@ class MockDatabase(db_module.AbstractDatabase):
 
     async def execute(self, query: str, *args):
         # MOCK IMPLEMENTATION FOR TESTING
-        if "INSERT INTO users" in query:
-            # args: name, email, password
+        if "INSERT INTO users (clerk_id) VALUES ($1)" in query:
             self.users.append({
                 "id": self._user_id_counter,
-                "name": args[0],
-                "email": args[1],
-                "password": args[2]
+                "clerk_id": args[0],
+                "name": None,
+                "email": None
             })
             self._user_id_counter += 1
             return
@@ -49,10 +48,9 @@ class MockDatabase(db_module.AbstractDatabase):
                     return self[name]
                 raise AttributeError(f"'Record' object has no attribute '{name}'")
 
-        if "SELECT name, email, password, id FROM users" in query:
-            # Login check
+        if "SELECT * FROM users WHERE clerk_id = $1" in query:
             for user in self.users:
-                if user["email"] == args[0]:
+                if user["clerk_id"] == args[0]:
                     return Record(user)
             return None
         if "SELECT * FROM users WHERE id =" in query:

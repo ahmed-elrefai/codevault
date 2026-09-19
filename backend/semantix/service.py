@@ -1,10 +1,10 @@
 import os
 import json
-from groq import Groq
+from groq import AsyncGroq
 from backend import settings
 from fastapi import HTTPException, status
 
-client = Groq(api_key=settings.GROQ_API_KEY)
+client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
 SYSTEM_PROMPT = """
 You are an expert code documentor and analyzer. Your task is to analyze the provided code snippet and return a structured JSON response.
@@ -18,12 +18,12 @@ The JSON must contain the following keys:
 Do not include any markdown formatting or explanations outside the JSON. Return ONLY the raw JSON string.
 """
 
-def analyze_code_with_llm(code: str) -> dict:
+async def analyze_code_with_llm(code: str) -> dict:
     if not settings.GROQ_API_KEY:
          raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AI Service not configured (Missing API Key)")
 
     try:
-        chat_completion = client.chat.completions.create(
+        chat_completion = await client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
