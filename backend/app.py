@@ -39,12 +39,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url:
-    origins = [frontend_url]
-    allow_creds = True
-else:
-    origins = ["*"]
-    allow_creds = False
+origins = ["https://codevlt.pro", "https://www.codevlt.pro", "https://codevault-8xz.pages.dev"]
+if frontend_url and frontend_url not in origins:
+    origins.append(frontend_url)
+allow_creds = True
 
 app.add_middleware(
     CORSMiddleware,
