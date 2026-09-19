@@ -12,3 +12,4 @@ pytest-asyncio
 httpx
 groq
 uvicorn
+PyJWT
