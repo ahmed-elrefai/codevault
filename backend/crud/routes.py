@@ -10,7 +10,8 @@ from backend.utils.security import hash_password
 
 
 from backend.auth.auth import get_current_user
-router = APIRouter(prefix="/api/v1")
+import os
+router = APIRouter(prefix=os.getenv("ROOT_ENDPOINT", "/api/v1"))
 
 @router.get("/users", response_model=list[UserResponse])
 async def get_users(limit: int = 10, offset: int = 0, db: AbstractDatabase = Depends(get_db)):

@@ -36,14 +36,20 @@ async def validation_exception_handler(request, exc):
 
 from fastapi.middleware.cors import CORSMiddleware
 
-origins = [
-    "*"
-]
+import os
+
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins = [frontend_url]
+    allow_creds = True
+else:
+    origins = ["*"]
+    allow_creds = False
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=False,
+    allow_credentials=allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
