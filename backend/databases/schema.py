@@ -4,9 +4,8 @@ async def create_users_table(db: AbstractDatabase):
     await db.create_table(
         "users", 
         "id SERIAL PRIMARY KEY", 
-        "name TEXT NOT NULL", 
-        "email TEXT UNIQUE NOT NULL", 
-        "password TEXT NOT NULL"
+        "clerk_id TEXT UNIQUE NOT NULL",
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
     )
 
 async def create_documents_table(db: AbstractDatabase):
