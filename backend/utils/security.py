@@ -17,7 +17,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Note: In a robust app, you would pass VITE_CLERK_PUBLISHABLE_KEY to the backend .env as well.
 # Since we saw it in backend/.env, we can read it:
 CLERK_PUB_KEY = os.getenv("VITE_CLERK_PUBLISHABLE_KEY", "pk_test_bGlnaHQtY295b3RlLTczMzcuY2xlcmsuYWNjb3VudHMuZGV2JA")
-clerk_domain = base64.b64decode(CLERK_PUB_KEY.split('_')[2][:-2]).decode('utf-8')
+b64_string = CLERK_PUB_KEY.split('_')[2]
+b64_string += "=" * ((4 - len(b64_string) % 4) % 4)
+decoded_domain = base64.b64decode(b64_string).decode('utf-8')
+if decoded_domain.endswith('$'):
+    decoded_domain = decoded_domain[:-1]
+clerk_domain = decoded_domain
 jwks_url = f"https://{clerk_domain}/.well-known/jwks.json"
 
 jwks_client = PyJWKClient(jwks_url)
