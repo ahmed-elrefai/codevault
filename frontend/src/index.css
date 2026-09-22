@@ -44,3 +44,16 @@
   background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
+
+.editor-textarea:focus {
+  outline: none !important;
+}
+
+/* Override Prism.js default backgrounds so the deep black editor background shines through */
+.editor-textarea,
+.editor-textarea + pre,
+pre[class*="language-"],
+code[class*="language-"] {
+  background: transparent !important;
+  text-shadow: none !important;
+}

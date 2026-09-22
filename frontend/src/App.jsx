@@ -18,7 +18,7 @@ const Footer = () => (
   }}>
     <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
       <div>
-        &copy; {new Date().getFullYear()} Codevlt. All rights reserved.
+        &copy; {new Date().getFullYear()} CodeVault. All rights reserved.
       </div>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
         <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
@@ -131,7 +131,7 @@ const Layout = ({ children }) => {
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
             <div style={{ borderRadius: '10px', overflow: 'hidden', display: 'flex', alignItems: 'center', width: '44px', height: '44px' }}>
-              <img src="/logo.jpg" alt="Codevlt Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/logo.jpg" alt="CodeVault Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <span style={{
               fontSize: '1.25rem',
@@ -140,7 +140,7 @@ const Layout = ({ children }) => {
               color: 'var(--color-text)',
               fontFamily: 'var(--font-mono)'
             }}>
-              Codevlt<span style={{ color: 'var(--color-primary)' }}>.</span>
+              CodeVault<span style={{ color: 'var(--color-primary)' }}>.</span>
             </span>
           </Link>
 
@@ -259,7 +259,7 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
 
   const handleCodeDropped = async (droppedCode) => {
     if (!user && useAI) {
-      alert("Please sign in to use the AI Documentor.");
+      toast.error("Please sign in to use the AI Documentor.");
       openSignIn();
       return;
     }
@@ -284,7 +284,7 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
       setCode(docString + droppedCode);
     } catch (error) {
       console.error("Analysis Failed:", error);
-      alert("AI Analysis failed, loading the snippet as-is. (" + error.message + ")");
+      toast.error("AI Analysis failed, loading the snippet as-is. (" + error.message + ")");
       setCode(droppedCode); // Fallback to the raw snippet
     } finally {
       setAnalyzing(false);
@@ -312,7 +312,7 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 animation: 'spin 1s linear infinite'
               }} />
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-              <h2>Validating with Codevlt AI...</h2>
+              <h2>Validating with CodeVault AI...</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Extracting semantics, complexity, and tags.</p>
             </div>
           ) : (
@@ -414,17 +414,17 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 textAlign: 'center',
                 paddingBottom: '5rem'
               }}>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why Codevlt?</h2>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why CodeVault?</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', textAlign: 'left' }}>
                   <FeatureCard
                     icon={<Video size={28} />}
                     title="Dev Content Creators"
-                    description="Stop making your audience manually type code from your videos. Drop a Codevlt checkpoint link in your description so they can copy exactly what you wrote."
+                    description="Stop making your audience manually type code from your videos. Drop a CodeVault checkpoint link in your description so they can copy exactly what you wrote."
                   />
                   <FeatureCard
                     icon={<GraduationCap size={28} />}
                     title="Programming Tutors & Students"
-                    description="Share assignments, examples, and boilerplate perfectly. Codevlt provides instantly accessible, formatted code that speeds up the learning process."
+                    description="Share assignments, examples, and boilerplate perfectly. CodeVault provides instantly accessible, formatted code that speeds up the learning process."
                   />
                   <FeatureCard
                     icon={<Users size={28} />}
@@ -443,13 +443,15 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
           <AnalysisResult result={analysisResult} />
 
           <div style={{ marginTop: 'var(--spacing-xl)' }}>
-            <SnippetEditor code={code} />
+            <SnippetEditor code={code} hideMetadataDisplay={!!analysisResult} />
           </div>
         </div>
       )}
     </div>
   );
 };
+
+import { Toaster, toast } from 'sonner';
 
 const AppContent = () => {
   const { getToken } = useAuth();
@@ -471,7 +473,12 @@ const AppContent = () => {
 };
 
 const App = () => {
-  return <AppContent />;
+  return (
+    <>
+      <Toaster position="bottom-right" theme="dark" />
+      <AppContent />
+    </>
+  );
 };
 
 export default App;

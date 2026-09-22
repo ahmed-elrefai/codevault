@@ -6,6 +6,7 @@ import SearchBar from './SearchBar';
 import ConfirmationModal from './ConfirmationModal';
 import SnippetEditor from './SnippetEditor';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
     const { user } = useUser();
@@ -38,7 +39,7 @@ const Dashboard = () => {
             setSnippets(prev => prev.filter(s => s.id !== snippetToDelete));
             setSnippetToDelete(null);
         } catch (err) {
-            alert('Failed to delete snippet');
+            toast.error('Failed to delete snippet');
             console.error(err);
         }
     };

@@ -7,13 +7,13 @@ const About = () => {
     <div className="container" style={{ maxWidth: '800px', margin: '4rem auto', color: 'var(--color-text)' }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '2rem', textAlign: 'center', letterSpacing: '-0.02em' }}>
-          About <span style={{ color: 'var(--color-primary)' }}>Codevlt</span>
+          About <span style={{ color: 'var(--color-primary)' }}>CodeVault</span>
         </h1>
 
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '2.5rem', marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-primary)' }}>What is Codevlt?</h2>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-primary)' }}>What is CodeVault?</h2>
           <p style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-            Codevlt is a platform engineered specifically for developers, content creators, and educators to share code snippets flawlessly. Say goodbye to messy unformatted text in video descriptions or disorganized gists. 
+            CodeVault is a platform engineered specifically for developers, content creators, and educators to share code snippets flawlessly. Say goodbye to messy unformatted text in video descriptions or disorganized gists. 
           </p>
           <p style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
             With a single click, your audience can grab beautifully formatted, AI-documented code directly into their clipboard, empowering seamless knowledge transfer and reducing friction for learners and collaborators alike.

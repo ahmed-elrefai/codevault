@@ -2,15 +2,25 @@ import React, { useState } from 'react';
 import { Save, Copy, Check } from 'lucide-react';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import { api } from '../api/client';
+import { parseSnippet } from '../utils/parseSnippet';
 
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import Editor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-python';
+import 'prismjs/themes/prism-tomorrow.css';
 
-const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
+const SnippetEditor = ({ code, onSave, initialSnippet = null, hideMetadataDisplay = false }) => {
     const navigate = useNavigate();
     const { user } = useUser();
     const { openSignIn } = useClerk();
+    const parsed = parseSnippet(initialSnippet?.content || code);
     const [title, setTitle] = useState(initialSnippet?.title || '');
-    const [content, setContent] = useState(initialSnippet?.content || code);
+    const [content, setContent] = useState(parsed.code);
+    const [metadata, setMetadata] = useState(parsed.metadata);
+    const [rawMetadata, setRawMetadata] = useState(parsed.rawMetadata);
     const [visibility, setVisibility] = useState(initialSnippet?.visibility || 'public');
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -24,28 +34,30 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
         setSaving(true);
         try {
             if (!title.trim()) {
-                alert('Please provide a title');
+                toast.error('Please provide a title');
                 setSaving(false);
                 return;
             }
+
+            const finalContent = rawMetadata ? `${rawMetadata}\n${content}` : content;
 
             if (initialSnippet && initialSnippet.id) {
                 // Update existing
                 await api.documents.update(initialSnippet.id, {
                     title,
-                    content,
+                    content: finalContent,
                     visibility
                 });
             } else {
                 // Create new
                 await api.documents.create({
                     title,
-                    content,
+                    content: finalContent,
                     visibility
                 });
             }
 
-            alert('Snippet saved successfully!');
+            toast.success('Snippet saved successfully!');
             if (onSave) onSave();
 
             // Redirect to dashboard only if creating new, or close modal if updating?
@@ -54,7 +66,7 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
             }
         } catch (err) {
             console.error('Save failed', err);
-            alert(`Failed to save: ${err.message}`);
+            toast.error(`Failed to save: ${err.message}`);
         } finally {
             setSaving(false);
         }
@@ -124,23 +136,55 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null }) => {
                 </div>
             </div>
 
-            <div style={{ position: 'relative' }}>
-                <textarea
+            {!hideMetadataDisplay && metadata && (
+                <div style={{
+                    padding: '1rem var(--spacing-md)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderBottom: '1px solid var(--color-border)',
+                }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-primary)' }}>AI Documentation (Read-Only)</h3>
+                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{metadata.description}</p>
+                    
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {metadata.time_complexity && (
+                            <span style={{ background: 'rgba(255, 204, 0, 0.1)', color: '#FFcc00', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                Time: {metadata.time_complexity}
+                            </span>
+                        )}
+                        {metadata.space_complexity && (
+                            <span style={{ background: 'rgba(0, 204, 255, 0.1)', color: '#00ccff', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                Space: {metadata.space_complexity}
+                            </span>
+                        )}
+                        {metadata.tags && metadata.tags.map((tag, i) => (
+                            <span key={i} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem' }}>
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div style={{ position: 'relative', height: '60vh', minHeight: '400px', maxHeight: '700px', overflowY: 'auto', backgroundColor: '#000' }}>
+                <Editor
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    spellCheck="false"
+                    onValueChange={code => setContent(code)}
+                    highlight={code => {
+                        const isPython = code.includes('def ') || code.includes('print(') || code.includes('import ') && !code.includes('const ') && !code.includes('let ');
+                        const lang = isPython ? 'python' : 'javascript';
+                        const grammar = isPython ? Prism.languages.python : Prism.languages.javascript;
+                        return Prism.highlight(code, grammar, lang);
+                    }}
+                    padding={20}
                     style={{
-                        width: '100%',
-                        minHeight: '400px',
-                        backgroundColor: '#000', // Deep black for code
-                        color: '#f8f8f2',
-                        padding: 'var(--spacing-md)',
                         fontFamily: 'var(--font-mono)',
                         fontSize: '0.9rem',
                         lineHeight: '1.6',
-                        border: 'none',
-                        resize: 'vertical'
+                        backgroundColor: '#000', // Reverted to deep black
+                        color: '#f8f8f2',
+                        minHeight: '100%'
                     }}
+                    textareaClassName="editor-textarea"
                 />
             </div>
         </div>

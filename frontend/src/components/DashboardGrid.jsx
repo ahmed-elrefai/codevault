@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Code, Calendar, Trash2, Link as LinkIcon, Check } from 'lucide-react';
+import { parseSnippet } from '../utils/parseSnippet';
 
 const DashboardGrid = ({ snippets, onDelete, onView }) => {
     const [copiedId, setCopiedId] = useState(null);
@@ -27,7 +28,9 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
             gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
             gap: 'var(--spacing-lg)'
         }}>
-            {snippets.map((snippet, index) => (
+            {snippets.map((snippet, index) => {
+                const { code } = parseSnippet(snippet.content);
+                return (
                 <motion.div
                     key={snippet.id || index}
                     layout
@@ -92,7 +95,7 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
                         overflow: 'hidden',
                         position: 'relative'
                     }}>
-                        {snippet.content.slice(0, 150)}...
+                        {code.slice(0, 150)}...
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px', background: 'linear-gradient(to bottom, transparent, var(--color-bg))' }} />
                     </div>
 
@@ -101,7 +104,7 @@ const DashboardGrid = ({ snippets, onDelete, onView }) => {
                         <span>{new Date(snippet.updated_at || snippet.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
                 </motion.div>
-            ))}
+            )})}
         </div>
     );
 };

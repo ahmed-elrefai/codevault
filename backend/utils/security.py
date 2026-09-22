@@ -16,10 +16,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Extract Frontend API URL from Clerk Publishable Key in environment variables
 # Note: In a robust app, you would pass VITE_CLERK_PUBLISHABLE_KEY to the backend .env as well.
 # Since we saw it in backend/.env, we can read it:
-CLERK_PUB_KEY = os.getenv("VITE_CLERK_PUBLISHABLE_KEY", "pk_test_bGlnaHQtY295b3RlLTczMzcuY2xlcmsuYWNjb3VudHMuZGV2JA")
-b64_string = CLERK_PUB_KEY.split('_')[2]
+CLERK_PUB_KEY = os.getenv("VITE_CLERK_PUBLISHABLE_KEY")
+if not CLERK_PUB_KEY:
+    raise ValueError("VITE_CLERK_PUBLISHABLE_KEY is not set in environment variables")
+b64_string = CLERK_PUB_KEY.split('_', 2)[2]
 b64_string += "=" * ((4 - len(b64_string) % 4) % 4)
-decoded_domain = base64.b64decode(b64_string).decode('utf-8')
+decoded_domain = base64.urlsafe_b64decode(b64_string).decode('utf-8')
 if decoded_domain.endswith('$'):
     decoded_domain = decoded_domain[:-1]
 clerk_domain = decoded_domain
