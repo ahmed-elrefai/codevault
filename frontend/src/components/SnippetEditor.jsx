@@ -22,8 +22,22 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null, hideMetadataDispla
     const [metadata, setMetadata] = useState(parsed.metadata);
     const [rawMetadata, setRawMetadata] = useState(parsed.rawMetadata);
     const [visibility, setVisibility] = useState(initialSnippet?.visibility || 'public');
+    const [burnAfterRead, setBurnAfterRead] = useState(initialSnippet?.burn_after_read || false);
+    const [expiration, setExpiration] = useState('never');
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    React.useEffect(() => {
+        const saveShortcut = import.meta.env.VITE_SHORTCUT_SAVE_SNIPPET || 'Enter';
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === saveShortcut.toLowerCase()) {
+                e.preventDefault();
+                handleSave();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [title, content, visibility, burnAfterRead, expiration, user]);
 
     const handleSave = async () => {
         if (!user) {
@@ -40,20 +54,33 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null, hideMetadataDispla
             }
 
             const finalContent = rawMetadata ? `${rawMetadata}\n${content}` : content;
+            
+            let expires_at = null;
+            if (expiration !== 'never') {
+                const now = new Date();
+                if (expiration === '1h') now.setHours(now.getHours() + 1);
+                if (expiration === '24h') now.setHours(now.getHours() + 24);
+                if (expiration === '7d') now.setDate(now.getDate() + 7);
+                expires_at = now.toISOString();
+            }
 
             if (initialSnippet && initialSnippet.id) {
                 // Update existing
                 await api.documents.update(initialSnippet.id, {
                     title,
                     content: finalContent,
-                    visibility
+                    visibility,
+                    burn_after_read: burnAfterRead,
+                    expires_at
                 });
             } else {
                 // Create new
                 await api.documents.create({
                     title,
                     content: finalContent,
-                    visibility
+                    visibility,
+                    burn_after_read: burnAfterRead,
+                    expires_at
                 });
             }
 
@@ -110,6 +137,27 @@ const SnippetEditor = ({ code, onSave, initialSnippet = null, hideMetadataDispla
                     }}
                 />
                 <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)', fontSize: '0.9rem', marginRight: '1rem', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={burnAfterRead} onChange={(e) => setBurnAfterRead(e.target.checked)} style={{ cursor: 'pointer' }} />
+                        🔥 Burn
+                    </label>
+                    <select
+                        value={expiration}
+                        onChange={(e) => setExpiration(e.target.value)}
+                        style={{
+                            background: 'var(--color-surface)',
+                            color: 'var(--color-text)',
+                            border: '1px solid var(--color-border)',
+                            padding: '0.4rem',
+                            borderRadius: 'var(--radius-sm)',
+                            outline: 'none',
+                        }}
+                    >
+                        <option value="never">No Expiration</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="24h">24 Hours</option>
+                        <option value="7d">7 Days</option>
+                    </select>
                     <select
                         value={visibility}
                         onChange={(e) => setVisibility(e.target.value)}

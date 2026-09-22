@@ -20,11 +20,15 @@ class DocumentCreate(BaseModel):
     title: str
     content: str
     visibility: Literal["public", "private"] = "public"
+    burn_after_read: bool = False
+    expires_at: datetime | None = None
     
 class DocumentUpdate(BaseModel):
     title: str
     content: str
     visibility: Literal["public", "private"] = "public"
+    burn_after_read: bool = False
+    expires_at: datetime | None = None
 
 # RESPONSE VALIDATORS
 
@@ -41,6 +45,9 @@ class DocumentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     visibility: Literal["public", "private"]
+    burn_after_read: bool
+    view_count: int
+    expires_at: datetime | None
     
 
 

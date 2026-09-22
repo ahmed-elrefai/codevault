@@ -17,7 +17,10 @@ async def create_documents_table(db: AbstractDatabase):
         "owner_id INTEGER REFERENCES users(id)",
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "visibility TEXT CHECK (visibility IN ('public', 'private'))"
+        "visibility TEXT CHECK (visibility IN ('public', 'private'))",
+        "burn_after_read BOOLEAN DEFAULT FALSE",
+        "view_count INTEGER DEFAULT 0",
+        "expires_at TIMESTAMPTZ"
     )
 
 async def create_analyzer_keys_table(db: AbstractDatabase):

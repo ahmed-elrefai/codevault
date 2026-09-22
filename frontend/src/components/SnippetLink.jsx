@@ -10,20 +10,28 @@ const SnippetLink = () => {
     const [error, setError] = useState(null);
     const [copied, setCopied] = useState(false);
     const [autoCopyAttempted, setAutoCopyAttempted] = useState(false);
+    const [activeShell, setActiveShell] = useState('powershell');
+
+    const fetchedRef = React.useRef(false);
 
     useEffect(() => {
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
+
         const fetchSnippet = async () => {
             try {
                 // Not using api.request directly because we don't want to fail if unauthenticated 
                 // in case it's a public snippet, though api.request handles token inclusion gracefully.
                 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-                const response = await fetch(`${API_BASE_URL}/api/v1/sn/${documentId}`);
+                const response = await fetch(`${API_BASE_URL}/api/v1/sn/${documentId}`, {
+                    credentials: 'include' 
+                });
                 if (!response.ok) {
                     const errData = await response.json();
                     throw new Error(errData.detail || 'Failed to fetch snippet');
                 }
                 const data = await response.json();
-                setSnippet(data.snippet);
+                setSnippet(data);
                 
                 try {
                     await navigator.clipboard.writeText(data.snippet);
@@ -44,7 +52,7 @@ const SnippetLink = () => {
     const handleManualCopy = async () => {
         if (snippet) {
             try {
-                await navigator.clipboard.writeText(snippet);
+                await navigator.clipboard.writeText(snippet.snippet);
                 setCopied(true);
             } catch(err) {
                 console.error("Failed to copy manually", err);
@@ -60,7 +68,9 @@ const SnippetLink = () => {
         return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
     }
 
-    const { metadata, code } = parseSnippet(snippet);
+    const { metadata, code } = parseSnippet(snippet.snippet || snippet);
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    const rawUrl = `${API_BASE_URL}/api/v1/sn/${documentId}/raw`;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
@@ -70,11 +80,72 @@ const SnippetLink = () => {
                 ) : autoCopyAttempted ? (
                     <div style={{ marginBottom: '1.5rem' }}>
                         <h2 style={{ color: 'var(--color-text)', marginBottom: '1rem' }}>Here is your snippet</h2>
-                        <button onClick={handleManualCopy} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}>
-                            <Copy size={18} /> Copy to Clipboard
-                        </button>
                     </div>
                 ) : null}
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                    <button onClick={handleManualCopy} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Copy size={18} /> Copy to Clipboard
+                    </button>
+                    <button onClick={async () => {
+                        await handleManualCopy();
+                        window.location.href = 'vscode://';
+                    }} className="btn btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--color-border)' }}>
+                        <Copy size={18} /> Copy & Launch VS Code (Ctrl+V)
+                    </button>
+                </div>
+            </div>
+
+            {/* Metrics & Expiration Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                {snippet.view_count !== undefined && (
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                        Viewed {snippet.view_count} times
+                    </div>
+                )}
+                {snippet.burn_after_read && (
+                    <div style={{ color: '#FF4d4d', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        🔥 Burned after this view
+                    </div>
+                )}
+                {snippet.expires_at && (
+                    <div style={{ color: '#FFcc00', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Clock size={14} /> Expires at {new Date(snippet.expires_at).toLocaleString()}
+                    </div>
+                )}
+            </div>
+
+            {/* Terminal Native Retrieval block */}
+            <div style={{ marginBottom: '2rem', background: '#0a0a0a', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Terminal Inject (VS Code)</div>
+                    <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: '8px' }}>
+                        <button onClick={() => setActiveShell('bash')} style={{ background: activeShell === 'bash' ? 'var(--color-primary)' : 'transparent', border: 'none', color: activeShell === 'bash' ? '#000' : 'var(--color-text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '0.4rem 0.8rem', borderRadius: '4px', transition: 'all 0.2s' }}>Bash / Zsh</button>
+                        <button onClick={() => setActiveShell('powershell')} style={{ background: activeShell === 'powershell' ? 'var(--color-primary)' : 'transparent', border: 'none', color: activeShell === 'powershell' ? '#000' : 'var(--color-text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '0.4rem 0.8rem', borderRadius: '4px', transition: 'all 0.2s' }}>PowerShell</button>
+                        <button onClick={() => setActiveShell('cmd')} style={{ background: activeShell === 'cmd' ? 'var(--color-primary)' : 'transparent', border: 'none', color: activeShell === 'cmd' ? '#000' : 'var(--color-text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '0.4rem 0.8rem', borderRadius: '4px', transition: 'all 0.2s' }}>CMD</button>
+                    </div>
+                </div>
+                
+                <div>
+                    {activeShell === 'bash' && (
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                            <code style={{ color: 'var(--color-primary)', fontSize: '0.95rem', padding: '0.75rem', flexGrow: 1 }}>curl -sL {rawUrl} | code -</code>
+                            <button onClick={() => { navigator.clipboard.writeText(`curl -sL ${rawUrl} | code -`); toast.success('Bash command copied!'); }} style={{ padding: '0.75rem', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}><Copy size={16} /></button>
+                        </div>
+                    )}
+                    {activeShell === 'powershell' && (
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                            <code style={{ color: 'var(--color-primary)', fontSize: '0.95rem', padding: '0.75rem', flexGrow: 1 }}>Invoke-RestMethod {rawUrl} | code -</code>
+                            <button onClick={() => { navigator.clipboard.writeText(`Invoke-RestMethod ${rawUrl} | code -`); toast.success('PowerShell command copied!'); }} style={{ padding: '0.75rem', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}><Copy size={16} /></button>
+                        </div>
+                    )}
+                    {activeShell === 'cmd' && (
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                            <code style={{ color: 'var(--color-primary)', fontSize: '0.95rem', padding: '0.75rem', flexGrow: 1 }}>curl.exe -sL {rawUrl} | code -</code>
+                            <button onClick={() => { navigator.clipboard.writeText(`curl.exe -sL ${rawUrl} | code -`); toast.success('CMD command copied!'); }} style={{ padding: '0.75rem', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}><Copy size={16} /></button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {metadata && (

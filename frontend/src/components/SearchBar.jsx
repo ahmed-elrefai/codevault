@@ -3,6 +3,19 @@ import { Search } from 'lucide-react';
 
 const SearchBar = ({ onSearch }) => {
     const [query, setQuery] = useState('');
+    const inputRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const searchShortcut = import.meta.env.VITE_SHORTCUT_SEARCH || 'k';
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === searchShortcut.toLowerCase()) {
+                e.preventDefault();
+                inputRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -12,8 +25,9 @@ const SearchBar = ({ onSearch }) => {
     return (
         <form onSubmit={handleSearch} style={{ position: 'relative', maxWidth: '600px', margin: '0 0 var(--spacing-xl) 0' }}>
             <input
+                ref={inputRef}
                 type="text"
-                placeholder="Search your snippets semantically (e.g. 'How to sort an array')..."
+                placeholder={`Search your snippets (Cmd/Ctrl + ${import.meta.env.VITE_SHORTCUT_SEARCH || 'K'})...`}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 style={{

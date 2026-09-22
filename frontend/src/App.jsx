@@ -6,7 +6,7 @@ import CodeDropZone from './components/CodeDropZone';
 import SnippetEditor from './components/SnippetEditor';
 import Dashboard from './components/Dashboard';
 import SnippetLink from './components/SnippetLink';
-import { Code, LogOut, User as UserIcon, Search, Zap, Shield, Video, GraduationCap, Users, Wallet, Check } from 'lucide-react';
+import { Code, LogOut, User as UserIcon, Search, Zap, Shield, Video, GraduationCap, Users, Wallet, Check, Terminal, Flame, Keyboard, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Footer = () => (
@@ -18,12 +18,12 @@ const Footer = () => (
   }}>
     <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
       <div>
-        &copy; {new Date().getFullYear()} CodeVault. All rights reserved.
+        &copy; {new Date().getFullYear()} Codevlt. All rights reserved.
       </div>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
         <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
         <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</Link>
-        <Link to="#" style={{ color: 'inherit', textDecoration: 'none' }}>Twitter</Link>
+        <a href="https://x.com/elreyodev" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Twitter</a>
       </div>
     </div>
   </footer>
@@ -131,16 +131,16 @@ const Layout = ({ children }) => {
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', textDecoration: 'none' }}>
             <div style={{ borderRadius: '10px', overflow: 'hidden', display: 'flex', alignItems: 'center', width: '44px', height: '44px' }}>
-              <img src="/logo.jpg" alt="CodeVault Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/logo.jpg" alt="Codevlt Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <span style={{
               fontSize: '1.25rem',
-              fontWeight: 700,
+              fontWeight: 800,
               letterSpacing: '-1px',
               color: 'var(--color-text)',
               fontFamily: 'var(--font-mono)'
             }}>
-              CodeVault<span style={{ color: 'var(--color-primary)' }}>.</span>
+              codevlt<span style={{ color: 'var(--color-primary)' }}>.pro</span>
             </span>
           </Link>
 
@@ -312,7 +312,7 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 animation: 'spin 1s linear infinite'
               }} />
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-              <h2>Validating with CodeVault AI...</h2>
+              <h2>Validating with Codevlt AI...</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Extracting semantics, complexity, and tags.</p>
             </div>
           ) : (
@@ -393,14 +393,29 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 textAlign: 'left'
               }}>
                 <FeatureCard
+                  icon={<Terminal size={28} />}
+                  title="Terminal Native Fetch"
+                  description="Inject snippets straight into VS Code using single-line curl commands for Bash, CMD, and PowerShell."
+                />
+                <FeatureCard
+                  icon={<Flame size={28} />}
+                  title="Burn After Reading"
+                  description="Share sensitive environment variables securely. The snippet self-destructs the moment it's viewed."
+                />
+                <FeatureCard
+                  icon={<Clock size={28} />}
+                  title="Auto Expirations"
+                  description="Set your snippets to automatically vanish after 1 hour, 24 hours, or 7 days to keep your vault clean."
+                />
+                <FeatureCard
+                  icon={<Keyboard size={28} />}
+                  title="Universal Shortcuts"
+                  description="Never touch your mouse. Instantly save snippets or focus semantic search using modifiable keyboard shortcuts."
+                />
+                <FeatureCard
                   icon={<Search size={28} />}
                   title="Semantic Search"
                   description="Don't remember the exact function name? Just describe what it does, and we'll find it for you."
-                />
-                <FeatureCard
-                  icon={<Zap size={28} />}
-                  title="Lightning Fast"
-                  description="Optimized for speed. Your snippets are indexed and ready to be pasted in milliseconds."
                 />
                 <FeatureCard
                   icon={<Shield size={28} />}
@@ -414,17 +429,17 @@ Tags: ${(tags || []).map(t => '#' + t).join(' ')}
                 textAlign: 'center',
                 paddingBottom: '5rem'
               }}>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why CodeVault?</h2>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '4rem', letterSpacing: '-0.02em' }}>Why Codevlt?</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', textAlign: 'left' }}>
                   <FeatureCard
                     icon={<Video size={28} />}
                     title="Dev Content Creators"
-                    description="Stop making your audience manually type code from your videos. Drop a CodeVault checkpoint link in your description so they can copy exactly what you wrote."
+                    description="Stop making your audience manually type code from your videos. Drop a Codevlt checkpoint link in your description so they can copy exactly what you wrote."
                   />
                   <FeatureCard
                     icon={<GraduationCap size={28} />}
                     title="Programming Tutors & Students"
-                    description="Share assignments, examples, and boilerplate perfectly. CodeVault provides instantly accessible, formatted code that speeds up the learning process."
+                    description="Share assignments, examples, and boilerplate perfectly. Codevlt provides instantly accessible, formatted code that speeds up the learning process."
                   />
                   <FeatureCard
                     icon={<Users size={28} />}
